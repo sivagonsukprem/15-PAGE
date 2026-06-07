@@ -491,14 +491,20 @@
     const total    = records.reduce((s,r) => s+r.money, 0);
     const names    = getPageNames();
     const pageName = `Page ${currentPage} - ${names[currentPage-1]}`;
+
+    // หา money ที่ยาวที่สุด เพื่อ align ขวาให้ตรงกัน
+    const moneyStrs = records.map(r => formatMoney(r.money));
+    const maxMoney  = Math.max(...moneyStrs.map(s => s.length), 8);
+
     let text = `📋 ${pageName}\n`;
-    text += `${'─'.repeat(38)}\n`;
-    records.forEach((rec,idx) => {
-      const sign = rec.money < 0 ? '' : '';
-      text += `${String(idx+1).padEnd(3)} ${formatDate(rec.date).padEnd(12)} ${rec.name.substring(0,16).padEnd(17)} ${formatMoney(rec.money)}\n`;
+    records.forEach((rec, idx) => {
+      const num     = String(idx + 1) + '.';
+      const date    = formatDate(rec.date);
+      const name    = rec.name.substring(0, 14).padEnd(14);
+      const money   = formatMoney(rec.money).padStart(maxMoney);
+      text += `${num.padEnd(4)}${date}   ${name}   ${money}\n`;
     });
-    text += `${'─'.repeat(38)}\n`;
-    text += `💰 Summary: ${formatMoney(total)}\n`;
+    text += `\n💰 Summary: ${formatMoney(total)}\n`;
     return { pageName, text };
   }
 

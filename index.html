@@ -511,12 +511,6 @@
     renderTable();
   }
 
-  function deleteRecord(id) {
-    if (!confirm('Delete this record?')) return;
-    saveRecords(currentPage, getRecords(currentPage).filter(r => r.id !== id));
-    renderTable();
-  }
-
   function renderTable() {
     const records = getRecords(currentPage);
     const tbody   = document.getElementById('table-body');
@@ -536,9 +530,17 @@
           <td>${escapeHtml(rec.name)}</td>
           <td class="td-money ${isNeg?'negative':'positive'}">${formatMoney(rec.money)}</td>
           <td class="td-action">
-            <button class="btn-delete" onclick="deleteRecord(${rec.id})" title="Delete">&#128465;</button>
+            <button class="btn-delete" data-id="${rec.id}" title="Delete">&#128465;</button>
           </td>`;
         tbody.appendChild(tr);
+
+        // ใช้ addEventListener แทน inline onclick — รองรับ iOS Safari
+        tr.querySelector('.btn-delete').addEventListener('click', function() {
+          const id = Number(this.getAttribute('data-id'));
+          if (!confirm('Delete this record?')) return;
+          saveRecords(currentPage, getRecords(currentPage).filter(r => r.id !== id));
+          renderTable();
+        });
       });
     }
     const total = records.reduce((s,r) => s+r.money, 0);

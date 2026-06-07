@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Record Manager - 15 Pages</title>
+  <style>
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+    html { font-size:16px; }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background:#f0f2f5; color:#333;
+      -webkit-text-size-adjust:100%;
+    }
+
+    /* ── Nav ── */
+    #navbar {
+      background:#1a1a2e; width:100%;
+      overflow-x:auto; white-space:nowrap;
+      -webkit-overflow-scrolling:touch;
+      scrollbar-width:none;
+    }
+    #navbar::-webkit-scrollbar { display:none; }
+    #nav-pages { display:inline-flex; padding:0 4px; }
+
+    .nav-btn {
+      display:inline-flex; flex-direction:column;
+      align-items:center; justify-content:center;
+      padding:10px 12px; min-width:68px;
+      background:transparent; border:none; color:#ccc;
+      cursor:pointer; line-height:1.3;
+      transition:background .2s, color .2s;
+      border-bottom:3px solid transparent;
+      touch-action:manipulation;
+      -webkit-tap-highlight-color:transparent;
+    }
+    .nav-btn:hover  { background:rgba(255,255,255,.08); color:#fff; }
+    .nav-btn.active { background:#f5a623; color:#1a1a2e; font-weight:700; border-bottom:3px solid #d4880e; }
+    .nav-btn .nav-num   { font-size:13px; font-weight:600; }
+    .nav-btn .nav-label { font-size:10px; margin-top:2px; opacity:.85; }
+    .nav-btn.setup-btn  { border-left:2px solid #444; color:#f5a623; }
+    .nav-btn.setup-btn.active { background:#f5a623; color:#1a1a2e; }
+
+    /* ── Page wrapper ── */
+    #main-content, #setup-content {
+      width:100%; max-width:960px;
+      margin:0 auto;
+      padding:20px 16px 40px;
+    }
+
+    /* ── Page header ── */
+    .page-header { margin-bottom:18px; }
+    .page-header h2 { font-size:clamp(20px, 4vw, 26px); font-weight:700; }
+    .page-header p  {
+      font-size:clamp(13px, 2vw, 15px); color:#555;
+      border-bottom:2px solid #333; display:inline-block; padding-bottom:2px;
+    }
+
+    /* ── Form card ── */
+    .form-card {
+      background:#fff; border:1px solid #ddd; border-radius:10px;
+      padding:16px; margin-bottom:16px;
+    }
+    .form-row {
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:12px;
+    }
+    .form-group { display:flex; flex-direction:column; gap:5px; }
+    .form-group label { font-size:13px; font-weight:600; color:#555; }
+    .form-group input {
+      width:100%; padding:10px 12px; border:1px solid #ccc; border-radius:8px;
+      font-size:15px; outline:none; transition:border-color .2s;
+      -webkit-appearance:none; appearance:none;
+      touch-action:manipulation;
+    }
+    .form-group input:focus { border-color:#4caf50; }
+    #input-money { text-align:right; }
+
+    /* Save button spans full width on its own row */
+    .form-group.span-full { grid-column: 1 / -1; }
+    #btn-save {
+      width:100%; background:#4caf50; color:#fff; border:none; border-radius:8px;
+      padding:12px; font-size:16px; font-weight:700;
+      cursor:pointer; transition:background .2s;
+      touch-action:manipulation; -webkit-tap-highlight-color:transparent;
+    }
+    #btn-save:active { background:#388e3c; }
+
+    /* ── Table card ── */
+    .table-card {
+      background:#fff; border:1px solid #ddd; border-radius:10px;
+      overflow:hidden; margin-bottom:16px;
+    }
+    #records-table { width:100%; border-collapse:collapse; table-layout:fixed; }
+    #records-table thead tr { background:#f5a623; color:#fff; }
+    #records-table thead th {
+      padding:11px 10px; font-size:13px; font-weight:700; text-align:left;
+      overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+    }
+    .col-seq    { width:42px;  text-align:center !important; }
+    .col-date   { width:95px; }
+    .col-name   { }
+    .col-money  { width:110px; text-align:right !important; }
+    .col-action { width:44px;  text-align:center !important; }
+
+    #records-table tbody tr { border-bottom:1px solid #eee; }
+    #records-table tbody td {
+      padding:10px; font-size:14px;
+      overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+    }
+    .td-seq    { text-align:center; color:#777; font-size:13px; }
+    .td-money  { text-align:right; font-weight:700; }
+    .td-money.positive { color:#1565c0; }
+    .td-money.negative { color:#c62828; }
+    .td-action { text-align:center; }
+
+    .btn-delete {
+      background:none; border:none; cursor:pointer; color:#e53935;
+      font-size:20px; padding:4px 6px; border-radius:6px;
+      touch-action:manipulation; -webkit-tap-highlight-color:transparent;
+    }
+    .btn-delete:active { background:#ffebee; }
+
+    /* Summary */
+    #summary-row td { padding:12px 10px; border-top:2px solid #eee; }
+    .summary-label { font-size:17px; font-weight:700; }
+    .summary-total {
+      text-align:right; font-size:clamp(20px,4vw,26px);
+      font-weight:700; color:#1565c0;
+    }
+    .summary-total.negative { color:#c62828; }
+
+    /* ── Share button ── */
+    .share-row { margin-top:8px; }
+    #btn-share {
+      width:100%; background:#4caf50; color:#fff; border:none; border-radius:10px;
+      padding:15px; font-size:17px; font-weight:700; letter-spacing:.5px;
+      cursor:pointer; transition:background .2s;
+      touch-action:manipulation; -webkit-tap-highlight-color:transparent;
+    }
+    #btn-share:active { background:#2e7d32; transform:scale(0.98); }
+
+    /* ── Empty state ── */
+    .empty-row td {
+      text-align:center; color:#bbb; padding:36px 16px;
+      font-style:italic; font-size:14px;
+    }
+
+    /* ── Setup page ── */
+    #setup-content { display:none; }
+    .setup-header { margin-bottom:18px; }
+    .setup-header h2 { font-size:clamp(20px,4vw,26px); font-weight:700; }
+    .setup-header p  {
+      font-size:13px; color:#555; border-bottom:2px solid #333;
+      display:inline-block; padding-bottom:2px;
+    }
+    .setup-card { background:#fff; border:1px solid #ccc; border-radius:10px; overflow:hidden; }
+    .setup-table { width:100%; border-collapse:collapse; }
+    .setup-table thead tr { background:#f5f5f5; }
+    .setup-table thead th {
+      padding:11px 14px; font-size:14px; font-weight:700;
+      text-align:left; border-bottom:2px solid #ccc;
+    }
+    .setup-table tbody tr { border-bottom:1px solid #ebebeb; }
+    .setup-table tbody tr:last-child { border-bottom:none; }
+    .setup-table td { padding:4px 14px; font-size:14px; }
+    .setup-table td.td-page-label { width:80px; color:#666; font-weight:600; white-space:nowrap; }
+    .setup-table td.td-page-input input {
+      width:100%; padding:8px 10px; border:1px solid transparent;
+      border-radius:6px; font-size:15px; background:transparent;
+      outline:none; transition:border-color .2s, background .2s;
+      -webkit-appearance:none;
+    }
+    .setup-table td.td-page-input input:focus { border-color:#f5a623; background:#fff; }
+    .setup-save-row { margin-top:16px; }
+    #btn-setup-save {
+      width:100%; background:#f5a623; color:#fff; border:none; border-radius:8px;
+      padding:14px; font-size:16px; font-weight:700;
+      cursor:pointer; transition:background .2s;
+      touch-action:manipulation; -webkit-tap-highlight-color:transparent;
+    }
+    #btn-setup-save:active { background:#d4880e; }
+
+    /* ── Tablet (iPad) 768px+ ── */
+    @media (min-width:768px) {
+      #main-content, #setup-content { padding:28px 24px 48px; }
+
+      .form-row {
+        grid-template-columns: auto auto 1fr auto;
+        align-items:flex-end;
+      }
+      .form-group.span-full { grid-column:auto; }
+      #btn-save { width:auto; padding:0 28px; height:46px; font-size:15px; }
+      .form-group input { height:46px; font-size:14px; }
+
+      .col-seq    { width:52px; }
+      .col-date   { width:110px; }
+      .col-money  { width:140px; }
+      .col-action { width:52px; }
+      #records-table thead th { padding:12px 14px; font-size:14px; }
+      #records-table tbody td { padding:11px 14px; font-size:14px; }
+
+      .share-row { display:flex; justify-content:flex-end; }
+      #btn-share { width:auto; padding:13px 40px; font-size:16px; }
+
+      .setup-save-row { display:flex; justify-content:flex-end; }
+      #btn-setup-save { width:auto; padding:12px 40px; font-size:15px; }
+      #setup-content { max-width:540px; margin:0 auto; padding:28px 24px; }
+    }
+
+    /* ── Desktop 1024px+ ── */
+    @media (min-width:1024px) {
+      .form-row { gap:16px; }
+      .col-date   { width:130px; }
+      .col-money  { width:160px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Nav -->
+<nav id="navbar"><div id="nav-pages"></div></nav>
+
+
+<!-- Main -->
+<main id="main-content">
+  <div class="page-header">
+    <h2 id="page-title">Page 1</h2>
+    <p id="page-subtitle">General Records</p>
+  </div>
+
+  <div class="form-card">
+    <div class="form-row">
+      <div class="form-group">
+        <label for="input-date">Date</label>
+        <input type="date" id="input-date" />
+      </div>
+      <div class="form-group">
+        <label for="input-name">Name</label>
+        <input type="text" id="input-name" placeholder="Name" />
+      </div>
+      <div class="form-group">
+        <label for="input-money">Money</label>
+        <input type="number" id="input-money" placeholder="0" step="0.01" />
+      </div>
+      <div class="form-group span-full">
+        <label>&nbsp;</label>
+        <button id="btn-save" onclick="saveRecord()">&#128190; Save</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="table-card">
+    <table id="records-table">
+      <thead>
+        <tr>
+          <th class="col-seq">SEQ</th>
+          <th class="col-date">Date</th>
+          <th class="col-name">Name</th>
+          <th class="col-money">Money</th>
+          <th class="col-action">Del</th>
+        </tr>
+      </thead>
+      <tbody id="table-body"></tbody>
+      <tfoot>
+        <tr id="summary-row">
+          <td colspan="3" class="summary-label">Summary</td>
+          <td id="summary-total" class="summary-total">0</td>
+          <td></td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+
+  <div class="share-row">
+    <button id="btn-share" onclick="shareRecords()">&#128279; SHARE</button>
+  </div>
+</main>
+
+<!-- Setup -->
+<div id="setup-content" style="display:none;">
+  <div class="setup-header">
+    <h2>&#9881; Setup Page Names</h2>
+    <p>Set a custom name for each page</p>
+  </div>
+  <div class="setup-card">
+    <table class="setup-table">
+      <thead><tr><th>Page</th><th>Description</th></tr></thead>
+      <tbody id="setup-tbody"></tbody>
+    </table>
+  </div>
+  <div class="setup-save-row">
+    <button id="btn-setup-save" onclick="saveSetup()">&#128190; Save Names</button>
+  </div>
+</div>
+
+<script>
+  // ── Utility ────────────────────────────────────────────────────────────
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+  function formatDate(s) {
+    if (!s) return '';
+    const [y,m,d] = s.split('-');
+    return `${d}/${m}/${y}`;
+  }
+  function formatMoney(v) {
+    return Number(v).toLocaleString('en-US', {minimumFractionDigits:0, maximumFractionDigits:2});
+  }
+
+  // ── App State ──────────────────────────────────────────────────────────
+  const PAGE_COUNT = 15;
+  const DEFAULT_LABELS = [
+    'General Records','Sales Records','Expense Records','Income Records',
+    'Transfer Records','Payment Records','Purchase Records','Summary Records',
+    'Daily Records','Weekly Records','Monthly Records','Tax Records',
+    'Bonus Records','Refund Records','Other Records',
+  ];
+
+  let currentPage = 1;
+
+  // ── localStorage helpers ───────────────────────────────────────────────
+  function getPageNames() {
+    try {
+      const raw = localStorage.getItem('rm_page_names');
+      const arr = raw ? JSON.parse(raw) : [];
+      return DEFAULT_LABELS.map((def, i) => (arr[i] && arr[i].trim()) ? arr[i].trim() : def);
+    } catch { return DEFAULT_LABELS.slice(); }
+  }
+
+  function savePageNames(arr) {
+    localStorage.setItem('rm_page_names', JSON.stringify(arr));
+  }
+
+  function getRecords(page) {
+    try {
+      const raw = localStorage.getItem(`rm_records_${page}`);
+      return raw ? JSON.parse(raw) : [];
+    } catch { return []; }
+  }
+
+  function saveRecords(page, records) {
+    localStorage.setItem(`rm_records_${page}`, JSON.stringify(records));
+  }
+
+  // ── Nav ────────────────────────────────────────────────────────────────
+  function buildNavBar() {
+    const names     = getPageNames();
+    const container = document.getElementById('nav-pages');
+    container.innerHTML = '';
+    for (let i = 1; i <= PAGE_COUNT; i++) {
+      const btn = document.createElement('button');
+      btn.className = 'nav-btn';
+      btn.id = `nav-btn-${i}`;
+      btn.onclick = () => switchPage(i);
+      btn.innerHTML = `<span class="nav-num">Page ${i}</span><span class="nav-label">${escapeHtml(names[i-1])}</span>`;
+      container.appendChild(btn);
+    }
+    const setupBtn = document.createElement('button');
+    setupBtn.className = 'nav-btn setup-btn';
+    setupBtn.id = 'nav-btn-setup';
+    setupBtn.onclick = openSetup;
+    setupBtn.innerHTML = `<span class="nav-num">&#9881;</span><span class="nav-label">Setup</span>`;
+    container.appendChild(setupBtn);
+  }
+
+  // ── Pages ──────────────────────────────────────────────────────────────
+  function switchPage(n) {
+    currentPage = n;
+    document.getElementById('main-content').style.display  = '';
+    document.getElementById('setup-content').style.display = 'none';
+    for (let i = 1; i <= PAGE_COUNT; i++)
+      document.getElementById(`nav-btn-${i}`).classList.toggle('active', i === n);
+    document.getElementById('nav-btn-setup').classList.remove('active');
+    const names = getPageNames();
+    document.getElementById('page-title').textContent    = `Page ${n}`;
+    document.getElementById('page-subtitle').textContent = names[n-1];
+    renderTable();
+  }
+
+  function openSetup() {
+    document.getElementById('main-content').style.display  = 'none';
+    document.getElementById('setup-content').style.display = 'block';
+    for (let i = 1; i <= PAGE_COUNT; i++)
+      document.getElementById(`nav-btn-${i}`).classList.remove('active');
+    document.getElementById('nav-btn-setup').classList.add('active');
+
+    const names = getPageNames();
+    const tbody = document.getElementById('setup-tbody');
+    tbody.innerHTML = '';
+    for (let i = 1; i <= PAGE_COUNT; i++) {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td class="td-page-label">Page${i}</td>
+        <td class="td-page-input">
+          <input type="text" id="setup-input-${i}" value="${escapeHtml(names[i-1])}" maxlength="40" />
+        </td>`;
+      tbody.appendChild(tr);
+    }
+  }
+
+  function saveSetup() {
+    const arr = [];
+    for (let i = 1; i <= PAGE_COUNT; i++)
+      arr.push(document.getElementById(`setup-input-${i}`).value.trim());
+    savePageNames(arr);
+    buildNavBar();
+    alert('Page names saved!');
+    switchPage(currentPage || 1);
+  }
+
+  // ── Records ────────────────────────────────────────────────────────────
+  function saveRecord() {
+    const dateVal  = document.getElementById('input-date').value.trim();
+    const nameVal  = document.getElementById('input-name').value.trim();
+    const moneyVal = document.getElementById('input-money').value.trim();
+    if (!dateVal || !nameVal || moneyVal === '') {
+      alert('Please fill in Date, Name, and Money before saving.');
+      return;
+    }
+    const money = parseFloat(moneyVal);
+    if (isNaN(money)) { alert('Money must be a valid number.'); return; }
+
+    const records = getRecords(currentPage);
+    records.push({ id: Date.now(), date: dateVal, name: nameVal, money });
+    saveRecords(currentPage, records);
+    document.getElementById('input-name').value  = '';
+    document.getElementById('input-money').value = '';
+    renderTable();
+  }
+
+  function deleteRecord(id) {
+    if (!confirm('Delete this record?')) return;
+    saveRecords(currentPage, getRecords(currentPage).filter(r => r.id !== id));
+    renderTable();
+  }
+
+  function renderTable() {
+    const records = getRecords(currentPage);
+    const tbody   = document.getElementById('table-body');
+    tbody.innerHTML = '';
+    if (records.length === 0) {
+      const tr = document.createElement('tr');
+      tr.className = 'empty-row';
+      tr.innerHTML = `<td colspan="5">No records yet. Add one above.</td>`;
+      tbody.appendChild(tr);
+    } else {
+      records.forEach((rec, idx) => {
+        const isNeg = rec.money < 0;
+        const tr    = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="td-seq">${idx+1}</td>
+          <td>${formatDate(rec.date)}</td>
+          <td>${escapeHtml(rec.name)}</td>
+          <td class="td-money ${isNeg?'negative':'positive'}">${formatMoney(rec.money)}</td>
+          <td class="td-action">
+            <button class="btn-delete" onclick="deleteRecord(${rec.id})" title="Delete">&#128465;</button>
+          </td>`;
+        tbody.appendChild(tr);
+      });
+    }
+    const total = records.reduce((s,r) => s+r.money, 0);
+    const el    = document.getElementById('summary-total');
+    el.textContent = formatMoney(total);
+    el.className   = 'summary-total' + (total < 0 ? ' negative' : '');
+  }
+
+  // ── Share ──────────────────────────────────────────────────────────────
+  function buildShareText() {
+    const records  = getRecords(currentPage);
+    const total    = records.reduce((s,r) => s+r.money, 0);
+    const names    = getPageNames();
+    const pageName = `Page ${currentPage} - ${names[currentPage-1]}`;
+    let text = `📋 ${pageName}\n`;
+    text += `${'─'.repeat(38)}\n`;
+    records.forEach((rec,idx) => {
+      const sign = rec.money < 0 ? '' : '';
+      text += `${String(idx+1).padEnd(3)} ${formatDate(rec.date).padEnd(12)} ${rec.name.substring(0,16).padEnd(17)} ${formatMoney(rec.money)}\n`;
+    });
+    text += `${'─'.repeat(38)}\n`;
+    text += `💰 Summary: ${formatMoney(total)}\n`;
+    return { pageName, text };
+  }
+
+  function shareRecords() {
+    const records = getRecords(currentPage);
+    if (records.length === 0) { alert('No records to share.'); return; }
+
+    const { pageName, text } = buildShareText();
+
+    // iOS / iPad — Web Share API (opens LINE, Messages, etc.)
+    if (navigator.share) {
+      navigator.share({ title: pageName, text: text })
+        .catch(err => {
+          // user cancelled = AbortError, ignore it
+          if (err && err.name !== 'AbortError') copyToClipboard(text);
+        });
+      return;
+    }
+
+    // Desktop / other — copy to clipboard
+    copyToClipboard(text);
+  }
+
+  function copyToClipboard(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text)
+        .then(() => alert('Copied to clipboard!\nPaste it in LINE.'))
+        .catch(() => fallbackCopy(text));
+    } else {
+      fallbackCopy(text);
+    }
+  }
+
+  function fallbackCopy(text) {
+    const ta = document.createElement('textarea');
+    ta.value = text; ta.style.position='fixed'; ta.style.opacity='0';
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); alert('Copied to clipboard!\nPaste it in LINE.'); }
+    catch { alert('Cannot copy.\n\n' + text); }
+    document.body.removeChild(ta);
+  }
+
+  // ── Init ───────────────────────────────────────────────────────────────
+  document.addEventListener('DOMContentLoaded', () => {
+    buildNavBar();
+    // set today's date
+    const t = new Date();
+    document.getElementById('input-date').value =
+      `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}-${String(t.getDate()).padStart(2,'0')}`;
+    switchPage(1);
+    ['input-name','input-money'].forEach(id => {
+      document.getElementById(id).addEventListener('keydown', e => { if (e.key==='Enter') saveRecord(); });
+    });
+  });
+</script>
+</body>
+</html>
